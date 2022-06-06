@@ -48,37 +48,44 @@ app.post("/api/urlshort/new", (req, res) => {
 
       var clean_url = submitted_url;
 
-      Url.findOne({ original_url: clean_url }, (err, docs) => {
+      Url.findOne({ original_url: clean_url }).then((err,docs) => {
 
         if(!docs) {
          const url_id = shortid.generate();
          const newUrlObj = new Url({original_url: clean_url,short_url: url_id,});
          newUrlObj.save();
+         return res
+           .status(200)
+           .send({ original_url: clean_url, short_url: url_id });
         }
          else {
             return res.status(200).send({ original_url: clean_url, short_url: url_id });
          }
-      })
-          
+      }).catch((err) => console.log(err))
 
     } else {
       console.log("Not a URI");
     }
-    res.redirect(200, "/");
+   
     
 })
 
-app.get("/short_url/:id", (req, res)=> {
+app.get("/urlshort/:id", (req, res)=> {
   const id = req.params.id
 
   Url.findOne({ short_url: id }, (err, docs) => {
     if (!docs) {
       return res.json({ message: "no url supported" });
     } else {
-      return res.json({original_url : docs.original_url, short_url : docs.short_url})
+      return res.json({
+        original_url: docs.original_url,
+        short_url: docs.short_url,
+      });
     }
   });
-})
+   
+  });
+
 
 app.listen(port, ()=> {
     console.log(`working on port ${port}`);
