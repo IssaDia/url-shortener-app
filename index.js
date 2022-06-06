@@ -41,45 +41,43 @@ const Url = mongoose.model("Url", urlSchema);
 
 
 app.post("/api/urlshort/new", (req, res) => {
+
     const submitted_url = req.body.url;
+
      if (validUrl.isUri(submitted_url)) {
-         var clean_url = submitted_url;
+
+      var clean_url = submitted_url;
+
       Url.findOne({ original_url: clean_url }, (err, docs) => {
-          if(!docs) {
+
+        if(!docs) {
          const url_id = shortid.generate();
-         const newUrlObj = new Todo({
-           original_url: clean_url,
-           short_url: url_id,
-         });
-         newUrlObj.save((err) => {
-           if (err) return res.status(500).send(err);
-           return res.status(200).send(newTodoObj);
-         });
-         return res.status(200).send({
-           original_url: clean_url,
-           short_url: url_id,
-         });
-        } else {
-         Url.findOne({ original_url: clean_url }, (err, docs) => {
-             if (docs !== null) {
-                  res.json({
-                    original_url: clean_url,
-                    short_url: url_id,
-                  });
-             } else if (err) {
-                 console.log(err);
-             }
-         });
-     }
+         const newUrlObj = new Url({original_url: clean_url,short_url: url_id,});
+         newUrlObj.save();
+        }
+         else {
+            return res.status(200).send({ original_url: clean_url, short_url: url_id });
+         }
+      })
+          
 
-      });
-
-     
-
-     } else {
-       console.log("Not a URI");
-     }
+    } else {
+      console.log("Not a URI");
+    }
+    res.redirect(200, "/");
     
+})
+
+app.get("/short_url/:id", (req, res)=> {
+  const id = req.params.id
+
+  Url.findOne({ short_url: id }, (err, docs) => {
+    if (!docs) {
+      return res.json({ message: "no url supported" });
+    } else {
+      return res.json({original_url : docs.original_url, short_url : docs.short_url})
+    }
+  });
 })
 
 app.listen(port, ()=> {
